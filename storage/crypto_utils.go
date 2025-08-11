@@ -23,17 +23,13 @@ func EncryptR(key []byte, source io.Reader) (io.Reader, error) {
 	// IV
 	iv := make([]byte, aes.BlockSize)
 	rand.Read(iv)
-	civ := make([]byte, aes.BlockSize)
-	for i := 0; i < aes.BlockSize; i++ {
-		civ[i] = iv[i] ^ key[i]
-	}
 	// Payload
 	block, err := aes.NewCipher(key[:])
 	if err != nil {
 		return nil, err
 	}
 	stream := cipher.NewCTR(block, iv)
-	return io.MultiReader(bytes.NewReader(civ), cipher.StreamReader{S: stream, R: source}), nil
+	return io.MultiReader(bytes.NewReader(iv), cipher.StreamReader{S: stream, R: source}), nil
 }
 
 func Encrypt(key []byte, dest io.Writer, source io.Reader) error {
@@ -43,11 +39,7 @@ func Encrypt(key []byte, dest io.Writer, source io.Reader) error {
 	// IV
 	iv := make([]byte, aes.BlockSize)
 	rand.Read(iv)
-	civ := make([]byte, aes.BlockSize)
-	for i := 0; i < aes.BlockSize; i++ {
-		civ[i] = iv[i] ^ key[i]
-	}
-	dest.Write(civ)
+	dest.Write(iv)
 	// Payload
 	block, err := aes.NewCipher(key[:])
 	if err != nil {
@@ -66,9 +58,6 @@ func Decrypt(key []byte, dest io.Writer, source io.Reader) error {
 	iv := make([]byte, aes.BlockSize)
 	if err := ReadFixed(source, iv); err != nil {
 		return err
-	}
-	for i := 0; i < aes.BlockSize; i++ {
-		iv[i] ^= key[i]
 	}
 	// Payload
 	block, err := aes.NewCipher(key[:])
