@@ -1,0 +1,106 @@
+<body>
+	<div>
+		<h3>Repo</h3>
+		<button onclick='initRepo()'>init</button>
+		<button onclick='pushRepo()'>push</button>
+		<button onclick='pullRepo()'>pull</button>
+		<br>
+	</div>
+	<div>
+		<h3>Blob</h3>
+		<input type='checkbox' id='blobs_fid' checked='true'><label for='blobs_fid'>fid</label>
+		<input type='checkbox' id='blobs_name' checked='true'><label for='blobs_name'>name</label>
+		<input type='checkbox' id='blobs_mtime'><label for='blobs_mtime'>mtime</label>
+		<input type='checkbox' id='blobs_comment'><label for='blobs_comment'>comment</label>
+		<input type='checkbox' id='blobs_tags'><label for='blobs_tags'>tags</label>
+		<button onclick='listBlobs()'>list</button>
+		<br>
+		<input id='blob_name' type='text' placeholder='name'>
+		<button onclick='addBlob()'>add</button>
+		<br>
+		<input id='blob_fid' type='text' placeholder='fid'>
+		<button onclick='updateBlob()'>update</button>
+		<button onclick='fetchBlob()'>fetch</button>
+		<button onclick='deleteBlob()'>delete</button>
+		<button onclick='blobMeta()'>meta</button>
+		<br>
+	</div>
+	<div>
+		<h3>File</h3>
+		<button onclick="listFiles()">list</button>
+		<br>
+		<input id='file_fid' type='text' placeholder='fid'>
+		<button onclick='deleteFile()'>delete</button>
+		<br>
+	</div>
+</body>
+
+<script>
+function goto(path) {
+	window.open(path, '_blank').focus();
+}
+
+// Repo
+
+function initRepo() {
+	goto('/api/repo/init');
+}
+
+function pushRepo() {
+	goto('/api/repo/push');
+}
+
+function pullRepo() {
+	goto('/api/repo/pull');
+}
+
+// Blob
+
+function listBlobs() {
+	let query = new URLSearchParams({
+		f_fid: blobs_fid.checked,
+		f_name: blobs_name.checked,
+		f_mtime: blobs_mtime.checked,
+		f_comment: blobs_comment.checked,
+		f_tags: blobs_tags.checked,
+	});
+	goto('/api/blob/list?' + query);
+}
+
+function addBlob() {
+	let query = new URLSearchParams({name: blob_name.value});
+	goto('/api/blob/add?' + query);
+}
+
+function updateBlob() {
+	let query = new URLSearchParams({fid: blob_fid.value});
+	goto('/api/blob/update?' + query);
+}
+
+function fetchBlob() {
+	let query = new URLSearchParams({fid: blob_fid.value});
+	goto('/api/blob/fetch?' + query);
+}
+
+function deleteBlob() {
+	if (!confirm('Delete blob?')) return;
+	let query = new URLSearchParams({fid: blob_fid.value});
+	goto('/api/blob/delete?' + query);
+}
+
+function blobMeta() {
+	let query = new URLSearchParams({fid: blob_fid.value});
+	goto('/blob/meta?' + query);
+}
+
+// File
+
+function listFiles() {
+	goto('/api/file/list');
+}
+
+function deleteFile() {
+	let query = new URLSearchParams({fid: file_fid.value});
+	goto('/api/file/delete?' + query);
+}
+</script>

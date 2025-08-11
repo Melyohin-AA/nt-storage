@@ -1,0 +1,104 @@
+<body onload='fetchMeta()'>
+	<h3>Blob meta</h3>
+	<input id='fidInput' type='text' placeholder='fid' readonly><br>
+	<input id='nameInput' type='text' placeholder='name'><br>
+	<input id='mtimeInput' type='number' placeholder='mtime'><!--//~ change type to datetime--><br>
+	<input id='commentInput' type='text' placeholder='comment'><br>
+	<div id='tagsInput'></div>
+	<button id='updateButton' onclick='updateMeta()'>update meta</button>
+</body>
+
+<script>
+const FID = new URLSearchParams(document.location.search).get('fid');
+
+class TagRow {
+	constructor(row, tagValue, tagValues) {
+		this.row = row;
+		this.tagValue = tagValue;
+		this.tag = tags[tv.tagId];
+		this.tagCat = tagCats[tag.catId];
+		row.insertCell().innerText = this.tagCat.name;
+		row.insertCell().innerText = this.tag.label;
+		let typeInput = document.createElement('input'); //~ replace with combobox
+		typeInput.value = this.tag.type;
+		row.insertCell().innerText = typeInput;
+		let valueInput = document.createElement('input');
+		valueInput.value = this.tagValue.value;
+		row.insertCell().innerText = valueInput;
+		let actions = document.createElement('div');
+		let removeButton = document.createElement('button');
+		removeButton.innerText = 'remove';
+		removeButton.onclick = () => {
+			tagRows = tagRows.filter(tv => tv !== this);
+			this.row.remove();
+		};
+		actions.appendChild(removeButton);
+		row.insertCell().innerText = actions;
+	}
+}
+
+let tagCats = {};
+let tags = {};
+let tagRows = [];
+
+function showError(error) {
+	console.error(error);
+	alert('Something went wrong');
+}
+
+function updateTagsTable(tagValues) {
+	let table = document.createElement('table');
+	let hrow = table.insertRow();
+	hrow.insertCell().innerText = 'Category';
+	hrow.insertCell().innerText = 'Label';
+	hrow.insertCell().innerText = 'Type';
+	hrow.insertCell().innerText = 'Value';
+	hrow.insertCell().innerText = 'Actions';
+	tagRows = [];
+	for (let i = 0; i < tagValues.length; i++) {
+		tagRows.push(new TagRow(table.insertRow(), tagValues[i], tagValues));
+	}
+	tagsInput.children[0]?.remove();
+	tagsInput.appendChild(table);
+}
+
+function fetchMeta() {
+	fidInput.value = FID;
+	let query = new URLSearchParams({fid: FID});
+	fetch('/api/blob/meta?' + query).then(response => {
+		if (!response.ok) {
+			response.text().then(error => {
+				console.error(error);
+				alert(`Negative response code: ${response.status}`);
+			}).catch(showError);
+			return;
+		}
+		response.json().then(meta => {
+			nameInput.value = meta.name;
+			mtimeInput.value = meta.mtime;
+			commentInput.value = meta.comment;
+		}).catch(showError);
+	}).catch(showError);
+}
+
+function updateMeta() {
+	updateButton.disabled = true;
+	let meta = {
+		name: nameInput.value,
+		mtime: mtimeInput.valueAsNumber,
+		comment: commentInput.value,
+	};
+	let query = new URLSearchParams({fid: FID});
+	fetch(
+		'/api/blob/meta?' + query,
+		{method: 'PUT', body: JSON.stringify(meta)}
+	).then(resp => {
+		console.log(resp);
+		resp.text().then(result => {
+			alert(result);
+		}).catch(showError);
+	}).catch(error => {
+		showError(error);
+	}).finally(() => updateButton.disabled = false);
+}
+</script>
