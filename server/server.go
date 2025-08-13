@@ -43,7 +43,7 @@ func (s *Server) Run() error {
 func (s *Server) newHandlers() (http.Handler, error) {
 	mux := http.NewServeMux()
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
-	if err := addPageHandlers(mux); err != nil {
+	if err := addPageHandlers(s, mux); err != nil {
 		return mux, err
 	}
 	mux.HandleFunc("/auth/login", s.oauthLoginH)
@@ -59,6 +59,9 @@ func (s *Server) newHandlers() (http.Handler, error) {
 	mux.HandleFunc("/api/blob/fetch", s.fetchBlobH)
 	mux.HandleFunc("/api/blob/delete", s.deleteBlobH)
 	mux.HandleFunc("/api/blob/meta", s.blobMetaH)
+	mux.HandleFunc("/api/tag/data", s.getTagDataH)
+	mux.HandleFunc("/api/tag/add", s.addTagH)
+	mux.HandleFunc("/api/tag/add-cat", s.addTagCatH)
 	return mux, nil
 }
 
@@ -72,10 +75,7 @@ func (s *Server) initService(token *oauth2.Token) error {
 	return nil
 }
 
-func (s *Server) exec(w http.ResponseWriter, r *http.Request, f func() (string, int)) {
-	if s.redirectToLoginIfRequired(w, r) {
-		return
-	}
+func (s *Server) exec(w http.ResponseWriter, f func() (string, int)) {
 	s.mx.Lock()
 	defer s.mx.Unlock()
 	output, code := f()

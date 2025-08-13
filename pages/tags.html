@@ -1,0 +1,141 @@
+<body onload='fetchData()'>
+	<div id='tagCatsArea'>
+		<h3>Tag Categories</h3>
+		<input id='tagCat_name' type='text' placeholder='name'>
+		<button id='addTagCatButton' onclick='addTagCat()'>add</button>
+	</div>
+	<div id='tagArea'>
+		<h3>Tags</h3>
+		<input id='tag_catId' type='number' placeholder='category id'>
+		<input id='tag_label' type='text' placeholder='label'>
+		<select id='tag_type'>
+			<option value="0">none</option>
+			<option value="1">bool</option>
+			<option value="2">int</option>
+			<option value="3">float</option>
+			<option value="4">string</option>
+		</select>
+		<button id='addTagButton' onclick='addTag()'>add</button>
+	</div>
+</body>
+
+<script>
+let tagCats = {};
+let tagCatRows = [];
+let tagCatTable = null;
+let tags = {};
+let tagRows = [];
+let tagTable = null;
+
+class TagCatRow {
+	constructor(row, tagCat) {
+		this.row = row;
+		this.tagCat = tagCat;
+		row.insertCell().innerText = tagCat.id;
+		row.insertCell().innerText = tagCat.name;
+		let actions = document.createElement('div');
+		let removeButton = document.createElement('button');
+		removeButton.innerText = 'remove';
+		removeButton.onclick = () => {
+			tagCatRows = tagCatRows.filter(tc => tc !== this);
+			this.row.remove();
+			//~
+		};
+		actions.appendChild(removeButton);
+		row.insertCell().appendChild(actions);
+	}
+}
+
+class TagRow {
+	constructor(row, tag) {
+		this.row = row;
+		this.tag = tag;
+		this.tagCat = tagCats[tag.catId];
+		row.insertCell().innerText = tag.id;
+		row.insertCell().innerText = `${tag.catId}: ${tagCats[tag.catId].name}`;
+		row.insertCell().innerText = tag.label;
+		row.insertCell().innerText = tag.type; //~
+		let actions = document.createElement('div');
+		let removeButton = document.createElement('button');
+		removeButton.innerText = 'remove';
+		removeButton.onclick = () => {
+			tagRows = tagRows.filter(t => t !== this);
+			this.row.remove();
+			//~
+		};
+		actions.appendChild(removeButton);
+		row.insertCell().appendChild(actions);
+	}
+}
+
+function fetchData() {
+	handleFetchJson(
+		fetch('/api/tag/data'),
+		data => {
+			tagCats = data.tagCats;
+			tags = data.tags;
+			updateTagCatsTable();
+			updateTagsTable();
+		}
+	);
+}
+
+function updateTagCatsTable() {
+	tagCatTable = document.createElement('table');
+	tagCatTable.setAttribute('border', '1');
+	tagCatTable.insertRow().innerHTML = '<th>Id</th><th>Name</th><th>Actions</th>';
+	console.log("A", tagCats);//~
+	for (const tagCat of Object.values(tagCats)) {
+		let row = tagCatTable.insertRow();
+		tagCatRows.push(new TagCatRow(row, tagCat));
+	}
+	tagCatsArea.appendChild(tagCatTable);
+}
+
+function updateTagsTable() {
+	tagTable = document.createElement('table');
+	tagTable.setAttribute('border', '1');
+	tagTable.insertRow().innerHTML = '<th>Id</th><th>Category</th><th>Label</th><th>Type</th><th>Actions</th>';
+	for (const tag of Object.values(tags)) {
+		let row = tagTable.insertRow();
+		tagRows.push(new TagRow(row, tag));
+	}
+	tagArea.appendChild(tagTable);
+}
+
+function addTagCat() {
+	addTagCatButton.disabled = true;
+	let data = {
+		name: tagCat_name.value,
+	};
+	handleFetchJson(
+		fetch('/api/tag/add-cat', {method: 'POST', body: JSON.stringify(data)}),
+		tagCat => {
+			alert('New tag category has been successfully added');
+			tagCats[tagCat.id] = tagCat;
+			let row = tagCatTable.insertRow();
+			tagCatRows.push(new TagCatRow(row, tagCat));
+		},
+		() => addTagCatButton.disabled = false
+	)
+}
+
+function addTag() {
+	addTagButton.disabled = true;
+	let data = {
+		catId: tag_catId.valueAsNumber,
+		label: tag_label.value,
+		type: tag_type.selectedIndex,
+	};
+	handleFetchJson(
+		fetch('/api/tag/add', {method: 'POST', body: JSON.stringify(data)}),
+		tag => {
+			alert('New tag has been successfully added');
+			tags[tag.id] = tag;
+			let row = tagTable.insertRow();
+			tagRows.push(new TagRow(row, tag));
+		},
+		() => addTagButton.disabled = false
+	);
+}
+</script>

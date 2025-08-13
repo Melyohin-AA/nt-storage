@@ -1,4 +1,4 @@
-<body onload='fetchMeta()'>
+<body onload='fetchData()'>
 	<h3>Blob meta</h3>
 	<input id='fidInput' type='text' placeholder='fid' readonly><br>
 	<input id='nameInput' type='text' placeholder='name'><br>
@@ -10,6 +10,10 @@
 
 <script>
 const FID = new URLSearchParams(document.location.search).get('fid');
+
+let tagCats = {};
+let tags = {};
+let tagRows = [];
 
 class TagRow {
 	constructor(row, tagValue, tagValues) {
@@ -37,15 +41,6 @@ class TagRow {
 	}
 }
 
-let tagCats = {};
-let tags = {};
-let tagRows = [];
-
-function showError(error) {
-	console.error(error);
-	alert('Something went wrong');
-}
-
 function updateTagsTable(tagValues) {
 	let table = document.createElement('table');
 	let hrow = table.insertRow();
@@ -62,23 +57,33 @@ function updateTagsTable(tagValues) {
 	tagsInput.appendChild(table);
 }
 
+function fetchData() {
+	fetchMeta();
+	fetchTagData();
+}
+
 function fetchMeta() {
 	fidInput.value = FID;
 	let query = new URLSearchParams({fid: FID});
-	fetch('/api/blob/meta?' + query).then(response => {
-		if (!response.ok) {
-			response.text().then(error => {
-				console.error(error);
-				alert(`Negative response code: ${response.status}`);
-			}).catch(showError);
-			return;
-		}
-		response.json().then(meta => {
+	handleFetchJson(
+		fetch('/api/blob/meta?' + query),
+		meta => {
 			nameInput.value = meta.name;
 			mtimeInput.value = meta.mtime;
 			commentInput.value = meta.comment;
-		}).catch(showError);
-	}).catch(showError);
+		}
+	);
+}
+
+function fetchTagData() {
+	handleFetchJson(
+		fetch('/api/tag/data'),
+		data => {
+			tagCats = data.tagCats;
+			tags = data.tags;
+			//~
+		}
+	);
 }
 
 function updateMeta() {

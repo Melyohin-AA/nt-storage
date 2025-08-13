@@ -24,12 +24,70 @@ func NewDataFile() *DataFile {
 	}
 }
 
+// tag cats
+
+func (df *DataFile) GetTagCat(id int32) (TagCategory, bool) {
+	df.mx.RLock()
+	defer df.mx.RUnlock()
+	tc, exists := df.tagCats[id]
+	return tc, exists
+}
+
+func (df *DataFile) TagCatCount() int {
+	df.mx.RLock()
+	defer df.mx.RUnlock()
+	return len(df.tagCats)
+}
+
+func (df *DataFile) TagCats() map[int32]TagCategory {
+	return df.tagCats
+}
+
+func (df *DataFile) AddTagCat(tagCat TagCategory) (TagCategory, error) {
+	df.mx.Lock()
+	defer df.mx.Unlock()
+	tagCat.Id = int32(len(df.tagCats))
+	if _, exists := df.tagCats[tagCat.Id]; exists {
+		return tagCat, fmt.Errorf("tag category with id %d already exists", tagCat.Id)
+	}
+	df.tagCats[tagCat.Id] = tagCat
+	return tagCat, nil
+}
+
+// tags
+
 func (df *DataFile) GetTag(id int32) (Tag, bool) {
 	df.mx.RLock()
 	defer df.mx.RUnlock()
 	tag, exists := df.tags[id]
 	return tag, exists
 }
+
+func (df *DataFile) TagCount() int {
+	df.mx.RLock()
+	defer df.mx.RUnlock()
+	return len(df.tags)
+}
+
+func (df *DataFile) Tags() map[int32]Tag {
+	return df.tags
+}
+
+func (df *DataFile) AddTag(tag Tag) (Tag, error) {
+	df.mx.Lock()
+	defer df.mx.Unlock()
+	tag.Id = int32(len(df.tags))
+	if _, exists := df.tags[tag.Id]; exists {
+		return tag, fmt.Errorf("tag with id %d already exists", tag.Id)
+	}
+	if _, exists := df.tagCats[tag.CatId]; !exists {
+		return tag, fmt.Errorf("tag category with id %d does not exist", tag.CatId)
+	}
+	df.tags[tag.Id] = tag
+	return tag, nil
+}
+
+// blobs
 
 func (df *DataFile) GetBlob(fid string) *Blob {
 	df.mx.RLock()
@@ -68,6 +126,8 @@ func (df *DataFile) RemoveBlob(fid string) {
 	defer df.mx.Unlock()
 	delete(df.blobs, fid)
 }
+
+// io
 
 func (df *DataFile) Write(writer io.Writer) error {
 	df.mx.RLock()

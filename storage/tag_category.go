@@ -6,8 +6,8 @@ import (
 )
 
 type TagCategory struct {
-	Id   int32
-	Name string
+	Id   int32  `json:"id"`
+	Name string `json:"name"`
 }
 
 func (tc *TagCategory) Write(writer io.Writer) error {

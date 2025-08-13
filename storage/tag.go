@@ -19,10 +19,10 @@ const (
 )
 
 type Tag struct {
-	Id    int32
-	CatId int32
-	Label string
-	Type  TagType
+	Id    int32   `json:"id"`
+	CatId int32   `json:"catId"`
+	Label string  `json:"label"`
+	Type  TagType `json:"type"`
 }
 
 func (tag *Tag) Write(writer io.Writer) error {

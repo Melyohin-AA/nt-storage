@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<title>NtStorage</title>
+<link rel='icon' type='image/x-icon' href='/static/favicon.ico'>
+</head>
+%s
+<script>
+function showError(error) {
+	console.error(error);
+	alert('Something went wrong');
+}
+
+function handleFetchJson(promise, handler, finalizer=null) {
+	promise = promise.then(resp => {
+		console.log(resp);
+		if (resp.ok) {
+			resp.json().then(handler).catch(showError);
+		} else {
+			resp.text().then(error => {
+				console.error(error);
+				alert(`Negative response code: ${resp.status}`);
+			}).catch(showError);
+		}
+	}).catch(error => {
+		showError(error);
+	});
+	if (finalizer) {
+		promise.finally(finalizer);
+	}
+}
+</script>
+</html>

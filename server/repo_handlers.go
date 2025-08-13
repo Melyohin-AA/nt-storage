@@ -5,13 +5,13 @@ import (
 )
 
 func (s *Server) initRepoH(w http.ResponseWriter, r *http.Request) {
-	s.exec(w, r, s.manager.InitRepo)
+	s.exec(w, s.manager.InitRepo)
 }
 
 func (s *Server) pushRepoH(w http.ResponseWriter, r *http.Request) {
-	s.exec(w, r, s.manager.PushRepo)
+	s.exec(w, s.manager.PushRepo)
 }
 
 func (s *Server) pullRepoH(w http.ResponseWriter, r *http.Request) {
-	s.exec(w, r, s.manager.PullRepo)
+	s.exec(w, s.manager.PullRepo)
 }
