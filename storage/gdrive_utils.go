@@ -13,7 +13,10 @@ import (
 // )
 
 func EscapeName(name string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(name, "\\", "\\\\"), "'", "\\'")
+	return strings.NewReplacer(
+		"\\", "\\\\",
+		"'", "\\'",
+	).Replace(name)
 }
 
 func ListFiles(service *drive.Service, q string) ([]*drive.File, error) {

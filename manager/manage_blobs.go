@@ -115,7 +115,7 @@ func (m *Manager) FetchBlob(fid string) (string, int) {
 	if err != nil {
 		return err.Error(), 500
 	}
-	file, err := os.OpenFile(blob.Name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
+	file, err := os.OpenFile(escapeFsRestrictedChars(blob.Name), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	if err != nil {
 		return err.Error(), 500
 	}
